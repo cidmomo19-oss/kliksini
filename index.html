@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer">
+    <title>Resource Gateway</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: "Lucida Console", Monaco, monospace;
+            background: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+        .catbox-container {
+            width: 100%;
+            max-width: 480px;
+            border: 2px dashed #bbb;
+            padding: 25px;
+            background: #ffffff;
+            border-radius: 6px;
+        }
+        .header { font-size: 18px; font-weight: bold; margin-bottom: 6px; }
+        .header span { color: #e83e8c; }
+        .sub-header {
+            font-size: 11px;
+            margin-bottom: 18px;
+            color: #666;
+            line-height: 1.5;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 12px;
+        }
+        .label-text { font-size: 11px; font-weight: bold; margin-bottom: 6px; display: block; }
+        .input-wrapper {
+            background: #fff;
+            border: 1px solid #ccc;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            border-radius: 4px;
+        }
+        input {
+            border: none;
+            outline: none;
+            font-family: inherit;
+            font-size: 14px;
+            width: 100%;
+            background: transparent;
+        }
+        .btn-buka {
+            background: #333;
+            color: #fff;
+            border: none;
+            padding: 13px;
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            text-transform: uppercase;
+            border-radius: 4px;
+        }
+        .btn-buka:hover { background: #000; }
+        .error-msg {
+            color: #dc3545;
+            font-size: 11px;
+            margin-top: 10px;
+            display: none;
+            text-align: center;
+            font-weight: bold;
+        }
+        .footer {
+            margin-top: 30px;
+            font-size: 9px;
+            color: #ccc;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="catbox-container">
+    <div class="header">resource<span>.</span>gateway</div>
+    <div class="sub-header">Sistem validasi kode referensi akses dokumen.</div>
+
+    <span class="label-text">KODE REFERENSI:</span>
+    <div class="input-wrapper">
+        <input type="text" id="kodeInput" placeholder="masukkan kode..." autocomplete="off">
+    </div>
+
+    <button class="btn-buka" onclick="prosesBuka()">Buka Dokumen</button>
+
+    <div id="errorArea" class="error-msg">⚠️ GAGAL! KODE SALAH.</div>
+
+    <div class="footer"> [ SYSTEM READY // NO-REFERRER ENABLED ] </div>
+</div>
+
+<script>
+    const GIST_URL = 'https://gist.githubusercontent.com/cidmomo19-oss/f0f99a89037e6e715c3cabb845da4da1/raw/data.json';
+    let db = {};
+
+    async function loadDb() {
+        try {
+            const resp = await fetch(GIST_URL + '?t=' + Date.now());
+            db = await resp.json();
+        } catch (e) {
+            console.error("Gagal sinkron database.");
+        }
+    }
+    loadDb();
+
+    function prosesBuka() {
+        const val = document.getElementById('kodeInput').value.trim();
+        const err = document.getElementById('errorArea');
+
+        err.style.display = "none";
+
+        if (db[val]) {
+            const targetUrl = db[val];
+            const a = document.createElement('a');
+            a.href = targetUrl;
+            a.rel = "noreferrer";
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
+        } else {
+            if (val !== "") err.style.display = "block";
+        }
+    }
+
+    document.getElementById('kodeInput').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') prosesBuka();
+    });
+</script>
+
+</body>
+</html>
