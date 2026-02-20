@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="referrer" content="no-referrer">
     <title>Resource Gateway</title>
+    <!-- Library buat enkripsi AES -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -97,7 +99,7 @@
 
     <div id="errorArea" class="error-msg">⚠️KODE SALAH⚠️.</div>
 
-    <div class="footer"> [ SYSTEM READY // NO-REFERRER ENABLED ] </div>
+    <div class="footer"> [ SUBSCRIBE YOUTUBE SEPUTAR LINK VIDEY ] </div>
 </div>
 
 <script>
@@ -114,22 +116,51 @@
     }
     loadDb();
 
+    function bukaUrl(targetUrl) {
+        const a = document.createElement('a');
+        a.href = targetUrl;
+        a.rel = "noreferrer";
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+    }
+
     function prosesBuka() {
         const val = document.getElementById('kodeInput').value.trim();
         const err = document.getElementById('errorArea');
 
         err.style.display = "none";
+        if (!val) return;
 
+        // --- 1. COBA MODE AES (BARU) ---
+        const hashInput = CryptoJS.SHA256(val).toString();
+        if (db[hashInput]) {
+            try {
+                const encryptedData = db[hashInput];
+                const bytes = CryptoJS.AES.decrypt(encryptedData, val);
+                const decryptedUrl = bytes.toString(CryptoJS.enc.Utf8);
+                
+                if (decryptedUrl && decryptedUrl.startsWith('http')) {
+                    bukaUrl(decryptedUrl);
+                    return;
+                }
+            } catch (e) { /* Gagal dekripsi, lanjut ke mode lama */ }
+        }
+
+        // --- 2. COBA MODE LAMA (PLAIN/BASE64) ---
         if (db[val]) {
-            const targetUrl = db[val];
-            const a = document.createElement('a');
-            a.href = targetUrl;
-            a.rel = "noreferrer";
-            a.style.display = 'none';
-            document.body.appendChild(a);
-            a.click();
+            let targetUrl = db[val];
+            // Cek jika isinya base64 tapi bukan link langsung
+            if (!targetUrl.startsWith('http')) {
+                try {
+                    const decoded = atob(targetUrl);
+                    if (decoded.startsWith('http')) targetUrl = decoded;
+                } catch(e) {}
+            }
+            bukaUrl(targetUrl);
         } else {
-            if (val !== "") err.style.display = "block";
+            // Jika dua-duanya gak ketemu
+            err.style.display = "block";
         }
     }
 
