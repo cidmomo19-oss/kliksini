@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="referrer" content="no-referrer">
-    <title>Resource Gateway</title>
+    <title>rєѕσur¢є.gαтєωαу</title>
     <!-- Library buat enkripsi AES -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <style>
@@ -87,22 +87,28 @@
 <body>
 
 <div class="catbox-container">
-    <div class="header">resource<span>.</span>gateway</div>
-    <div class="sub-header">Sistem validasi kode referensi akses dokumen.</div>
+    <!-- rєѕσur¢є.gαтєωαу -->
+    <div class="header">rєѕσur¢є<span>.</span>gαтєωαу</div>
+    <div class="sub-header">Ѕіѕтєm νаlіdаѕі kσdє гєfєгєηѕі аkѕєѕ dσkumеη.</div>
 
-    <span class="label-text">KODE REFERENSI:</span>
+    <!-- КОDЕ RЕFЕRЕNЅІ -->
+    <span class="label-text">Кσdє Rєfєrєηѕі:</span>
     <div class="input-wrapper">
-        <input type="text" id="kodeInput" placeholder="masukkan kode..." autocomplete="off">
+        <input type="text" id="kodeInput" placeholder="mаѕukkаη kσdє..." autocomplete="off">
     </div>
 
-    <button class="btn-buka" onclick="prosesBuka()">Buka Dokumen</button>
+    <!-- Bukа Dσkumеη -->
+    <button class="btn-buka" onclick="prosesBuka()">Вukа Dσkumеη</button>
 
-    <div id="errorArea" class="error-msg">⚠️KODE SALAH⚠️</div>
+    <!-- Кσdє Sаlаh -->
+    <div id="errorArea" class="error-msg">⚠️ Кσdє Sаlаh ⚠️</div>
 
-    <div class="footer"> [ PASTIKAN KODE KALIAN BENAR ] </div>
+    <!-- Рαѕтіkаη kσdє kαlіαη bеηаг -->
+    <div class="footer"> [ Рαѕтіkаη kσdє kαlіαη bеηаг ] </div>
 </div>
 
 <script>
+    // GANTI URL GIST KAMU DI SINI
     const GIST_URL = 'https://gist.githubusercontent.com/cidmomo19-oss/f0f99a89037e6e715c3cabb845da4da1/raw/data.json';
     let db = {};
 
@@ -132,7 +138,7 @@
         err.style.display = "none";
         if (!val) return;
 
-        // --- 1. COBA MODE AES (BARU) ---
+        // 1. MODE AES (Keamanan Tinggi)
         const hashInput = CryptoJS.SHA256(val).toString();
         if (db[hashInput]) {
             try {
@@ -144,13 +150,12 @@
                     bukaUrl(decryptedUrl);
                     return;
                 }
-            } catch (e) { /* Gagal dekripsi, lanjut ke mode lama */ }
+            } catch (e) {}
         }
 
-        // --- 2. COBA MODE LAMA (PLAIN/BASE64) ---
+        // 2. MODE LAMA (Fallback)
         if (db[val]) {
             let targetUrl = db[val];
-            // Cek jika isinya base64 tapi bukan link langsung
             if (!targetUrl.startsWith('http')) {
                 try {
                     const decoded = atob(targetUrl);
@@ -159,7 +164,6 @@
             }
             bukaUrl(targetUrl);
         } else {
-            // Jika dua-duanya gak ketemu
             err.style.display = "block";
         }
     }
