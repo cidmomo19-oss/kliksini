@@ -2,175 +2,403 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="referrer" content="no-referrer">
-    <title>rєѕσur¢є.gαтєωαу</title>
-    <!-- Library buat enkripsi AES -->
+    <title>Gatekeeper AI</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <style>
-        * { box-sizing: border-box; }
-        body {
-            margin: 0;
-            font-family: "Lucida Console", Monaco, monospace;
-            background: #f4f4f4;
-            display: flex;
-            justify-content: center;
-            padding: 20px;
+        /* RESET & VARIABEL WARNA */
+        :root {
+            --theme-color: #008069;
+            --bg-color: #d1d7db; /* Warna luar untuk PC */
+            --app-bg-color: #efe7dd;
+            --bubble-me-color: #dcf8c6;
+            --bubble-bot-color: #ffffff;
+            --footer-bg-color: #f0f2f5;
+            --text-dark: #111b21;
+            --text-meta: #667781;
         }
-        .catbox-container {
+
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            -webkit-tap-highlight-color: transparent; /* Hilangkan highlight biru saat di-tap di HP */
+        }
+        
+        html, body {
+            height: 100%;
+            height: 100dvh; /* Tinggi dinamis akurat untuk HP */
             width: 100%;
-            max-width: 480px;
-            border: 2px dashed #bbb;
-            padding: 25px;
-            background: #ffffff;
-            border-radius: 6px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
         }
-        .header { font-size: 18px; font-weight: bold; margin-bottom: 6px; }
-        .header span { color: #e83e8c; }
-        .sub-header {
-            font-size: 11px;
-            margin-bottom: 18px;
-            color: #666;
-            line-height: 1.5;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 12px;
+
+        /* 
+         * STRATEGI MOBILE FIRST
+         * Defaultnya: Mentok layar (Edge-to-Edge) untuk semua HP
+         */
+        .app-container {
+            width: 100%;
+            height: 100%;
+            background: var(--app-bg-color);
+            display: flex;
+            flex-direction: column;
+            position: relative;
         }
-        .label-text { font-size: 11px; font-weight: bold; margin-bottom: 6px; display: block; }
-        .input-wrapper {
-            background: #fff;
-            border: 1px solid #ccc;
-            padding: 12px;
+
+        /* 
+         * HANYA aktif jika dibuka di Layar Lebar (Tablet/PC)
+         */
+        @media (min-width: 600px) {
+            body {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .app-container {
+                max-width: 420px; /* Ukuran standard HP */
+                height: 90vh; /* Tidak mentok atas-bawah di PC */
+                max-height: 850px;
+                border-radius: 12px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+                overflow: hidden;
+            }
+        }
+
+        /* HEADER */
+        .header {
+            background-color: var(--theme-color);
+            color: white;
+            padding: 12px 15px;
             display: flex;
             align-items: center;
-            margin-bottom: 15px;
-            border-radius: 4px;
+            flex-shrink: 0;
+            z-index: 10;
+            padding-top: max(12px, env(safe-area-inset-top));
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
-        input {
+        .avatar-circle {
+            width: 42px; height: 42px;
+            background: #fff;
+            color: var(--text-dark);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px;
+            margin-right: 12px;
+        }
+        .info h4 { font-size: 16px; font-weight: 600; margin-bottom: 2px; }
+        .info p { font-size: 13px; opacity: 0.9; }
+
+        /* AREA CHAT */
+        .chat-box {
+            flex-grow: 1;
+            background-image: url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png");
+            background-color: var(--app-bg-color);
+            background-size: cover;
+            background-position: center;
+            padding: 15px 10px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* BUBBLE CHAT */
+        .bubble {
+            max-width: 85%;
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: 15px;
+            line-height: 1.4;
+            position: relative;
+            box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+            word-wrap: break-word;
+            color: var(--text-dark);
+        }
+        .me {
+            align-self: flex-end;
+            background: var(--bubble-me-color);
+            border-top-right-radius: 2px;
+        }
+        .bot {
+            align-self: flex-start;
+            background: var(--bubble-bot-color);
+            border-top-left-radius: 2px;
+        }
+        .meta-time {
+            font-size: 11px;
+            color: var(--text-meta);
+            text-align: right;
+            margin-top: 5px;
+            display: block;
+        }
+
+        /* TOMBOL RAHASIA (Link Buka) */
+        .secret-btn {
+            display: block;
+            margin-top: 10px;
+            background: var(--theme-color);
+            color: white;
+            text-align: center;
+            padding: 12px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 14px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+        }
+
+        /* AREA INPUT BAWAH */
+        .footer {
+            background: var(--footer-bg-color);
+            padding: 10px;
+            padding-bottom: max(10px, env(safe-area-inset-bottom));
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+        .input-text {
+            flex-grow: 1;
+            padding: 12px 18px;
+            border-radius: 25px;
             border: none;
             outline: none;
-            font-family: inherit;
-            font-size: 14px;
-            width: 100%;
-            background: transparent;
+            font-size: 16px;
+            background: var(--bubble-bot-color);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
-        .btn-buka {
-            background: #333;
-            color: #fff;
+        .send-btn {
+            background: var(--theme-color);
             border: none;
-            padding: 13px;
-            font-family: inherit;
-            font-size: 12px;
-            font-weight: bold;
+            width: 48px; height: 48px;
+            border-radius: 50%;
+            color: white;
             cursor: pointer;
-            width: 100%;
-            text-transform: uppercase;
-            border-radius: 4px;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            flex-shrink: 0;
         }
-        .btn-buka:hover { background: #000; }
-        .error-msg {
-            color: #dc3545;
-            font-size: 11px;
-            margin-top: 10px;
-            display: none;
-            text-align: center;
-            font-weight: bold;
-        }
-        .footer {
-            margin-top: 30px;
-            font-size: 9px;
-            color: #ccc;
-            text-align: center;
-            letter-spacing: 1px;
-        }
+        .send-btn:active { background: #01604f; }
+        .send-btn svg { width: 22px; height: 22px; margin-left: -2px; } /* SVG Pesawat kertas */
     </style>
 </head>
 <body>
 
-<div class="catbox-container">
-    <!-- rєѕσur¢є.gαтєωαу -->
-    <div class="header">rєѕσur¢є<span>.</span>gαтєωαу</div>
-    <div class="sub-header">Ѕіѕтєm νаlіdаѕі kσdє гєfєгєηѕі аkѕєѕ dσkumеη.</div>
+<div class="app-container">
+    <header class="header">
+        <div class="avatar-circle">🤖</div>
+        <div class="info">
+            <h4>Asisten Virtual</h4>
+            <p id="statusText">Online</p>
+        </div>
+    </header>
 
-    <!-- КОDЕ RЕFЕRЕNЅІ -->
-    <span class="label-text">Кσdє Rєfєrєηѕі:</span>
-    <div class="input-wrapper">
-        <input type="text" id="kodeInput" placeholder="mаѕukkаη kσdє..." autocomplete="off">
-    </div>
+    <main class="chat-box" id="chatBox">
+        <div class="bubble bot">
+            Halo! Ada yang bisa saya bantu? ☕
+            <span class="meta-time" id="waktuAwal"></span>
+        </div>
+    </main>
 
-    <!-- Bukа Dσkumеη -->
-    <button class="btn-buka" onclick="prosesBuka()">Вukа Dσkumеη</button>
-
-    <!-- Кσdє Sаlаh -->
-    <div id="errorArea" class="error-msg">⚠️ Кσdє Sаlаh ⚠️</div>
-
-    <!-- Рαѕтіkаη kσdє kαlіαη bеηаг -->
-    <div class="footer"> [ Рαѕтіkаη kσdє kαlіαη bеηаг ] </div>
+    <footer class="footer">
+        <input type="text" id="msgInput" class="input-text" placeholder="Ketik pesan..." autocomplete="off">
+        <button class="send-btn" id="sendButton">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+        </button>
+    </footer>
 </div>
 
 <script>
-    // GANTI URL GIST KAMU DI SINI
+document.addEventListener('DOMContentLoaded', () => {
+
+    const chatBox = document.getElementById('chatBox');
+    const msgInput = document.getElementById('msgInput');
+    const sendButton = document.getElementById('sendButton');
+    const statusText = document.getElementById('statusText');
+    const waktuAwal = document.getElementById('waktuAwal');
+    
+    // Set waktu awal pas web dibuka
+    waktuAwal.innerText = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    // =========================================
+    //  OTAK CHATBOT (DIKEMBANGKAN LEBIH CERDAS)
+    // =========================================
+    // Sekarang formatnya menggunakan Array untuk balasan, biar bot bisa milih jawaban acak
+    const botBrain = [
+        { 
+            triggers: ["halo", "hi", "p", "test", "oy", "hey", "assalamualaikum", "ping"], 
+            replies: [
+                "Halo! Ada yang bisa dibantu?",
+                "Hai! Ketik kode kalau punya, atau mau ngobrol aja?",
+                "Waalaikumsalam / Halo! Silakan masukkan kodenya.",
+                "Hadir boss! Ada yang perlu dicek?",
+                "Iya halo, bot penjaga siap melayani."
+            ] 
+        },
+        { 
+            triggers: ["kode", "link", "url", "minta", "bagi", "buka", "mana"], 
+            replies: [
+                "Wah, saya cuma mesin. Kalau gak masukin kodenya, pintunya gak mau buka.",
+                "Saya cuma nerima kode rahasia. Silakan ketik kodenya yang benar.",
+                "Maaf, saya gak nyimpen link. Tugas saya cuma nyocokin kode yang kamu ketik.",
+                "Coba ketik kodenya di sini. Kalau benar nanti langsung saya kasih aksesnya."
+            ] 
+        },
+        { 
+            triggers: ["siapa", "nama", "bot", "admin"], 
+            replies: [
+                "Saya sistem penjaga gerbang otomatis. Panggil aja Gatekeeper.",
+                "Saya bot yang ditugasin buat nyaring pengunjung nih.",
+                "Cuma asisten virtual biasa yang nungguin orang bawa kode."
+            ] 
+        },
+        { 
+            triggers: ["goblok", "bodoh", "anjing", "babi", "tolol", "bangsat"], 
+            replies: [
+                "Waduh, bahasanya dijaga ya bos. Santai aja.",
+                "Sabar bang, jangan ngegas sama bot.",
+                "Sistem mendeteksi kata kasar. Mohon gunakan bahasa yang sopan.",
+                "Yah malah marah-marah, mending masukin kode aja."
+            ] 
+        },
+        { 
+            triggers: ["thanks", "makasih", "ok", "sip", "mantap", "y"], 
+            replies: [
+                "Sama-sama! 🙏",
+                "Siapp bos!",
+                "Oke, ada lagi?",
+                "Mantap 👍"
+            ] 
+        }
+    ];
+
+    // Default balasan kalau ga ada kata kunci yang cocok
+    const defaultReplies = [
+        "Hmm, oke oke.",
+        "Oh gitu ya.",
+        "Maaf, saya kurang paham maksudnya. Bisa dijelaskan lagi?",
+        "Menarik...",
+        "Coba ketik pakai bahasa yang lebih jelas.",
+        "Saya cuma bot, jadi ga semua obrolan saya ngerti 😅",
+        "Terus terus? (Bercanda, saya bingung mau bales apa)",
+        "Kodenya salah bos, atau emang cuma mau ngajak ngobrol?",
+        "Coba periksa lagi ketikannya.",
+        "Masuk akal juga."
+    ];
+
+    function getChatResponse(text) {
+        text = text.toLowerCase().trim();
+        for (const item of botBrain) {
+            // Cek apakah ada kata trigger di pesan user
+            if (item.triggers.some(trigger => text.includes(trigger))) {
+                // Ambil balasan acak dari kategori yang cocok
+                return item.replies[Math.floor(Math.random() * item.replies.length)];
+            }
+        }
+        // Kalau ga ketemu, ambil balasan default acak
+        return defaultReplies[Math.floor(Math.random() * defaultReplies.length)];
+    }
+
+    // =========================================
+    //  DATABASE GATEWAY
+    // =========================================
     const GIST_URL = 'https://gist.githubusercontent.com/cidmomo19-oss/f0f99a89037e6e715c3cabb845da4da1/raw/data.json';
     let db = {};
 
     async function loadDb() {
         try {
-            const resp = await fetch(GIST_URL + '?t=' + Date.now());
-            db = await resp.json();
+            const response = await fetch(`${GIST_URL}?t=${Date.now()}`); 
+            db = await response.json();
         } catch (e) {
-            console.error("Gagal sinkron database.");
+            console.error("Gagal load DB");
         }
     }
     loadDb();
 
-    function bukaUrl(targetUrl) {
-        const a = document.createElement('a');
-        a.href = targetUrl;
-        a.rel = "noreferrer";
-        a.style.display = 'none';
-        document.body.appendChild(a);
-        a.click();
-    }
-
-    function prosesBuka() {
-        const val = document.getElementById('kodeInput').value.trim();
-        const err = document.getElementById('errorArea');
-
-        err.style.display = "none";
-        if (!val) return;
-
-        // 1. MODE AES (Keamanan Tinggi)
-        const hashInput = CryptoJS.SHA256(val).toString();
+    function checkGatewayCode(input) {
+        const hashInput = CryptoJS.SHA256(input).toString();
         if (db[hashInput]) {
             try {
-                const encryptedData = db[hashInput];
-                const bytes = CryptoJS.AES.decrypt(encryptedData, val);
-                const decryptedUrl = bytes.toString(CryptoJS.enc.Utf8);
-                
-                if (decryptedUrl && decryptedUrl.startsWith('http')) {
-                    bukaUrl(decryptedUrl);
-                    return;
-                }
+                const bytes = CryptoJS.AES.decrypt(db[hashInput], input);
+                const url = bytes.toString(CryptoJS.enc.Utf8);
+                if (url && url.startsWith('http')) return url;
             } catch (e) {}
         }
-
-        // 2. MODE LAMA (Fallback)
-        if (db[val]) {
-            let targetUrl = db[val];
-            if (!targetUrl.startsWith('http')) {
+        if (db[input]) {
+            let value = db[input];
+            if (typeof value === 'string' && !value.startsWith('http')) {
                 try {
-                    const decoded = atob(targetUrl);
-                    if (decoded.startsWith('http')) targetUrl = decoded;
-                } catch(e) {}
+                    const decoded = atob(value);
+                    if (decoded.startsWith('http')) value = decoded;
+                } catch (e) {}
             }
-            bukaUrl(targetUrl);
-        } else {
-            err.style.display = "block";
+            if (typeof value === 'string' && value.startsWith('http')) return value;
         }
+        return null;
     }
 
-    document.getElementById('kodeInput').addEventListener('keypress', function (e) {
-        if (e.key === 'Enter') prosesBuka();
+    // =========================================
+    //  LOGIKA CHAT & TAMPILAN
+    // =========================================
+    function addBubble(htmlMsg, type) {
+        const div = document.createElement('div');
+        div.className = `bubble ${type}`;
+        const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        
+        div.innerHTML = `${htmlMsg}<span class="meta-time">${time}</span>`;
+        chatBox.appendChild(div);
+        
+        // Scroll ke bawah dengan halus
+        chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' });
+    }
+
+    function kirimPesan() {
+        const text = msgInput.value.trim();
+        if (!text) return;
+
+        addBubble(text, 'me');
+        msgInput.value = '';
+        msgInput.focus();
+
+        statusText.innerText = "sedang mengetik...";
+        const delay = Math.floor(Math.random() * 800) + 700; // Delay natural ngetik 0.7 - 1.5 detik
+
+        setTimeout(() => {
+            statusText.innerText = "Online";
+            const secretLink = checkGatewayCode(text);
+
+            if (secretLink) {
+                // JIKA KODE BENAR
+                addBubble("Kode diterima. Identitas terverifikasi. ✅", 'bot');
+                setTimeout(() => {
+                    const btnHtml = `<a href="${secretLink}" class="secret-btn" target="_blank" rel="noopener noreferrer">BUKA AKSES SEKARANG 🔓</a>`;
+                    addBubble(`Akses diberikan. Silakan klik tombol di bawah:<br>${btnHtml}`, 'bot');
+                }, 600);
+            } else {
+                // JIKA BUKAN KODE (Ngobrol Biasa)
+                const chatReply = getChatResponse(text);
+                addBubble(chatReply, 'bot');
+            }
+        }, delay);
+    }
+    
+    sendButton.addEventListener('click', kirimPesan);
+    msgInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            kirimPesan();
+        }
     });
+
+    // Fix untuk keyboard HP biar ga ketutupan
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener("resize", () => {
+            chatBox.scrollTop = chatBox.scrollHeight;
+        });
+    }
+});
 </script>
 
 </body>
