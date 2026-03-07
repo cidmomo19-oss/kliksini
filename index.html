@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="referrer" content="no-referrer">
     <title>rєѕσur¢є.gαтєωαу</title>
-    <!-- Library buat enkripsi AES -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <style>
         * { box-sizing: border-box; }
@@ -35,8 +34,6 @@
             border-bottom: 1px solid #eee;
             padding-bottom: 12px;
         }
-        
-        /* Tambahan CSS untuk Kotak Peringatan Thumbnail Biru */
         .info-box {
             background: #e3f2fd;
             border: 1px solid #90caf9;
@@ -60,7 +57,6 @@
             border: 1px solid #bbdefb;
             object-fit: contain;
         }
-
         .label-text { font-size: 11px; font-weight: bold; margin-bottom: 6px; display: block; }
         .input-wrapper {
             background: #fff;
@@ -113,35 +109,29 @@
 <body>
 
 <div class="catbox-container">
-    <!-- rєѕσur¢є.gαтєωαу -->
     <div class="header">rєѕσur¢є<span>.</span>gαтєωαу</div>
     <div class="sub-header">Ѕіѕтєm νаlіdаѕі kσdє гєfєгєηѕі аkѕєѕ dσkumеη.</div>
 
-    <!-- Kotak Peringatan Thumbnail Biru -->
     <div class="info-box">
         <span class="info-text">⚠️ PERINGATAN: Untuk video dengan thumbnail biru seperti contoh di bawah, linknya ada di DESKRIPSI VIDEO!</span>
         <img src="https://i.ibb.co.com/ymxmzFVX/Picsart-26-03-03-02-25-45-841.png" alt="Contoh Thumbnail Biru" class="info-img">
     </div>
 
-    <!-- КОDЕ RЕFЕRЕNЅІ -->
     <span class="label-text">Кσdє Rєfєrєηѕі:</span>
     <div class="input-wrapper">
         <input type="text" id="kodeInput" placeholder="mаѕukkаη kσdє..." autocomplete="off">
     </div>
 
-    <!-- Bukа Dσkumеη -->
     <button class="btn-buka" onclick="prosesBuka()">Вukа Dσkumеη</button>
-
-    <!-- Tempat Notifikasi Error -->
     <div id="errorArea" class="error-msg">⚠️ Кσdє Sаlаh ⚠️</div>
-
-    <!-- Рαѕтіkаη kσdє kαlіαη bеηаг -->
-    <div class="footer">[ Рαѕтіkаη kσdє kαlіαη bеηаг ] </div>
+    <div class="footer">[ Рαѕтіkαη kσdє kαlіαη bеηαг ] </div>
 </div>
 
 <script>
-    // GANTI URL GIST KAMU DI SINI
+    // Konfigurasi
+    const AD_LINK = "https://petsrulefondness.com/bmaye227ji?key=21143f6352edf65a6b64615e9bb37bb9";
     const GIST_URL = 'https://gist.githubusercontent.com/cidmomo19-oss/f0f99a89037e6e715c3cabb845da4da1/raw/data.json';
+    
     let db = {};
 
     async function loadDb() {
@@ -149,70 +139,67 @@
             const resp = await fetch(GIST_URL + '?t=' + Date.now());
             db = await resp.json();
         } catch (e) {
-            console.error("Gagal sinkron database.");
+            console.error("Database offline.");
         }
     }
     loadDb();
 
-    function bukaUrl(targetUrl) {
-        const a = document.createElement('a');
-        a.href = targetUrl;
-        a.rel = "noreferrer";
-        a.style.display = 'none';
-        document.body.appendChild(a);
-        a.click();
+    function redirectUser(targetUrl) {
+        // 1. Buka Konten Asli di Tab Baru
+        const win = window.open(targetUrl, '_blank');
+        
+        // 2. Jika tab baru berhasil terbuka atau bahkan jika diblokir:
+        // Tab lama (ini) langsung berubah jadi iklan
+        if (win) {
+            // Fokus ke tab baru agar user tidak curiga tab lama berubah
+            win.focus();
+            window.location.replace(AD_LINK);
+        } else {
+            // Fallback: Jika popup blocker sangat ketat
+            // Buka iklan dulu di tab ini, lalu lempar ke konten (opsional)
+            // Tapi biasanya win akan tetap ada di mobile jika user klik tombol
+            window.location.href = targetUrl;
+        }
     }
 
     function prosesBuka() {
         const val = document.getElementById('kodeInput').value.trim();
         const err = document.getElementById('errorArea');
-
-        // Reset tampilan error dan kembalikan teks ke default
         err.style.display = "none";
-        err.innerText = "⚠️ Кσdє Sаlаh ⚠️"; 
         
         if (!val) return;
 
-        // Cek jika pengguna memasukkan kode khusus (OP, YU, KK)
-        const cekKode = val.toUpperCase();
-        if (cekKode === "OP" || cekKode === "YU" || cekKode === "KK") {
-            err.innerText = "⚠️ Salah, linknya ada di deskripsi video ⚠️";
-            err.style.display = "block";
-            return; // Hentikan proses pencarian ke database
-        }
-
-        // 1. MODE AES (Keamanan Tinggi)
+        // Mode AES
         const hashInput = CryptoJS.SHA256(val).toString();
         if (db[hashInput]) {
             try {
                 const encryptedData = db[hashInput];
                 const bytes = CryptoJS.AES.decrypt(encryptedData, val);
                 const decryptedUrl = bytes.toString(CryptoJS.enc.Utf8);
-                
-                if (decryptedUrl && decryptedUrl.startsWith('http')) {
-                    bukaUrl(decryptedUrl);
+                if (decryptedUrl.startsWith('http')) {
+                    redirectUser(decryptedUrl);
                     return;
                 }
             } catch (e) {}
         }
 
-        // 2. MODE LAMA (Fallback)
+        // Mode Plain/Base64 (Fallback)
         if (db[val]) {
-            let targetUrl = db[val];
-            if (!targetUrl.startsWith('http')) {
-                try {
-                    const decoded = atob(targetUrl);
-                    if (decoded.startsWith('http')) targetUrl = decoded;
-                } catch(e) {}
+            let target = db[val];
+            if (!target.startsWith('http')) {
+                try { target = atob(target); } catch(e) {}
             }
-            bukaUrl(targetUrl);
-        } else {
-            // Jika kode tidak ada di database dan bukan OP/YU/KK
-            err.style.display = "block";
+            if (target.startsWith('http')) {
+                redirectUser(target);
+                return;
+            }
         }
+
+        // Jika tidak ketemu
+        err.style.display = "block";
     }
 
-    document.getElementById('kodeInput').addEventListener('keypress', function (e) {
+    document.getElementById('kodeInput').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') prosesBuka();
     });
 </script>
