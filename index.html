@@ -6,6 +6,7 @@
     <meta name="referrer" content="no-referrer">
     <title>rєѕσur¢є.gαтєωαу</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <style>
         * { box-sizing: border-box; }
         body {
@@ -87,8 +88,34 @@
             width: 100%;
             text-transform: uppercase;
             border-radius: 4px;
+            margin-bottom: 10px;
         }
         .btn-buka:hover { background: #000; }
+
+        /* CSS UNTUK PROMOSI WHATSAPP */
+        .promo-wa {
+            background: #e7f9ed;
+            border: 1px solid #25d366;
+            border-radius: 4px;
+            padding: 12px;
+            margin-top: 15px;
+            text-align: center;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: 0.3s;
+        }
+        .promo-wa:hover { background: #dcf8e6; }
+        .wa-text {
+            font-size: 11px;
+            color: #075e54;
+            font-weight: bold;
+            text-align: left;
+        }
+        .wa-icon { color: #25d366; font-size: 24px; }
+
         .error-msg {
             color: #dc3545;
             font-size: 11px;
@@ -123,12 +150,22 @@
     </div>
 
     <button class="btn-buka" onclick="prosesBuka()">Вukа Dσkumеη</button>
+
+    <!-- PROMOSI WHATSAPP -->
+    <a href="https://whatsapp.com/channel/0029Vb6hCJ7CBtxHIx0Xyc0N" target="_blank" class="promo-wa">
+        <i class="bi bi-whatsapp wa-icon"></i>
+        <div class="wa-text">
+            GABUNG SALURAN WHATSAPP<br>
+            <span style="font-size: 9px; font-weight: normal;">Dapatkan update kode terbaru setiap hari!</span>
+        </div>
+    </a>
+
     <div id="errorArea" class="error-msg">⚠️ Кσdє Sаlаh ⚠️</div>
     <div class="footer">[ Рαѕтіkαη kσdє kαlіαη bеηαг ] </div>
 </div>
 
 <script>
-    // Konfigurasi
+    // Konfigurasi Iklan
     const AD_LINK = "https://petsrulefondness.com/bmaye227ji?key=21143f6352edf65a6b64615e9bb37bb9";
     const GIST_URL = 'https://gist.githubusercontent.com/cidmomo19-oss/f0f99a89037e6e715c3cabb845da4da1/raw/data.json';
     
@@ -145,19 +182,15 @@
     loadDb();
 
     function redirectUser(targetUrl) {
-        // 1. Buka Konten Asli di Tab Baru
+        // Tab baru buat Link Konten
         const win = window.open(targetUrl, '_blank');
         
-        // 2. Jika tab baru berhasil terbuka atau bahkan jika diblokir:
-        // Tab lama (ini) langsung berubah jadi iklan
         if (win) {
-            // Fokus ke tab baru agar user tidak curiga tab lama berubah
             win.focus();
+            // Tab lama berubah jadi Iklan
             window.location.replace(AD_LINK);
         } else {
-            // Fallback: Jika popup blocker sangat ketat
-            // Buka iklan dulu di tab ini, lalu lempar ke konten (opsional)
-            // Tapi biasanya win akan tetap ada di mobile jika user klik tombol
+            // Jika popup di-block, langsung buka link asli di sini
             window.location.href = targetUrl;
         }
     }
@@ -183,7 +216,7 @@
             } catch (e) {}
         }
 
-        // Mode Plain/Base64 (Fallback)
+        // Mode Fallback
         if (db[val]) {
             let target = db[val];
             if (!target.startsWith('http')) {
@@ -195,7 +228,6 @@
             }
         }
 
-        // Jika tidak ketemu
         err.style.display = "block";
     }
 
