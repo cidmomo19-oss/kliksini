@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="referrer" content="no-referrer">
     <title>rєѕσur¢є.gαтєωαу</title>
+    <!-- Library buat enkripsi AES -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <style>
@@ -24,7 +25,6 @@
             padding: 25px;
             background: #ffffff;
             border-radius: 6px;
-            position: relative;
         }
         .header { font-size: 18px; font-weight: bold; margin-bottom: 6px; }
         .header span { color: #e83e8c; }
@@ -36,6 +36,7 @@
             border-bottom: 1px solid #eee;
             padding-bottom: 12px;
         }
+        
         .info-box {
             background: #e3f2fd;
             border: 1px solid #90caf9;
@@ -78,7 +79,6 @@
             width: 100%;
             background: transparent;
         }
-        
         .btn-buka {
             background: #333;
             color: #fff;
@@ -91,11 +91,10 @@
             width: 100%;
             text-transform: uppercase;
             border-radius: 4px;
-            margin-bottom: 10px;
-            transition: 0.3s;
         }
         .btn-buka:hover { background: #000; }
 
+        /* CSS UNTUK PROMOSI WHATSAPP */
         .promo-wa {
             background: #e7f9ed;
             border: 1px solid #25d366;
@@ -111,7 +110,12 @@
             transition: 0.3s;
         }
         .promo-wa:hover { background: #dcf8e6; }
-        .wa-text { font-size: 11px; color: #075e54; font-weight: bold; text-align: left; }
+        .wa-text {
+            font-size: 11px;
+            color: #075e54;
+            font-weight: bold;
+            text-align: left;
+        }
         .wa-icon { color: #25d366; font-size: 24px; }
 
         .error-msg {
@@ -130,29 +134,17 @@
             letter-spacing: 1px;
         }
 
-        /* --- POP UP MODAL STYLE --- */
+        /* POP UP MODAL */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.6);
-            display: none;
-            align-items: center; justify-content: center;
-            z-index: 9999;
-            backdrop-filter: blur(3px);
+            background: rgba(0, 0, 0, 0.7);
+            display: none; align-items: center; justify-content: center;
+            z-index: 9999; backdrop-filter: blur(4px);
         }
         .modal-content {
-            background: white;
-            width: 90%; max-width: 350px;
-            padding: 25px;
-            border-radius: 12px;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            animation: popUpAnim 0.3s ease-out;
+            background: white; width: 90%; max-width: 350px;
+            padding: 25px; border-radius: 12px; text-align: center;
         }
-        @keyframes popUpAnim { from {transform: scale(0.8); opacity: 0;} to {transform: scale(1); opacity: 1;} }
-        
-        .modal-title { font-size: 16px; font-weight: bold; margin-bottom: 15px; color: #333; }
-        .modal-desc { font-size: 12px; color: #666; margin-bottom: 20px; }
-        
         .btn-modal-yt {
             background: #ff0000; color: white; border: none;
             width: 100%; padding: 12px; border-radius: 6px;
@@ -185,7 +177,7 @@
         <input type="text" id="kodeInput" placeholder="mаѕukkаη kσdє..." autocomplete="off">
     </div>
 
-    <button class="btn-buka" onclick="triggerCheck()">Вukа Dσkumеη</button>
+    <button class="btn-buka" onclick="prosesBuka()">Вukа Dσkumеη</button>
 
     <a href="https://whatsapp.com/channel/0029Vb6hCJ7CBtxHIx0Xyc0N" target="_blank" class="promo-wa">
         <i class="bi bi-whatsapp wa-icon"></i>
@@ -196,19 +188,19 @@
     </a>
 
     <div id="errorArea" class="error-msg">⚠️ Кσdє Sаlаh ⚠️</div>
-    <div class="footer">[ Рαѕтіkαη kσdє kαlіαη bеηаг ] </div>
+
+    <div class="footer">[ Рαѕтіkαη kσdє kαlіαη bеηαг ] </div>
 </div>
 
+<!-- POP UP WAJIB LIKE -->
 <div id="likeModal" class="modal-overlay">
     <div class="modal-content">
-        <div class="modal-title"><i class="bi bi-shield-lock"></i> Verifikasi Akses</div>
-        <p class="modal-desc">Wajib <b>Like Video</b> YouTube admin dulu sebelum tombol bisa dibuka. Gratis kok!</p>
-        
-        <button class="btn-modal-yt" id="btnBukaYt" onclick="bukaYoutube()">
-            <i class="bi bi-youtube"></i> Buka & Like Video
+        <h3 style="font-size: 16px; margin-bottom: 10px;">Verifikasi Like</h3>
+        <p style="font-size: 12px; color: #666; margin-bottom: 20px;">Wajib Like video admin untuk membuka link dokumen.</p>
+        <button class="btn-modal-yt" onclick="bukaYoutube()">
+            <i class="bi bi-youtube"></i> Like Video
         </button>
-
-        <button id="btnLanjut" class="btn-modal-check" onclick="selesaiLike()">
+        <button id="btnLanjut" class="btn-modal-check" onclick="eksekusiFinal()">
             <i class="bi bi-clock"></i> Tunggu sebentar...
         </button>
     </div>
@@ -220,114 +212,75 @@
     const GIST_URL = 'https://gist.githubusercontent.com/cidmomo19-oss/f0f99a89037e6e715c3cabb845da4da1/raw/data.json';
     
     let db = {};
-    let isLiked = false;
+    let pendingUrl = ""; 
 
     async function loadDb() {
         try {
             const resp = await fetch(GIST_URL + '?t=' + Date.now());
             db = await resp.json();
-        } catch (e) { console.error("Database offline."); }
+        } catch (e) { console.error("Gagal sinkron database."); }
     }
     loadDb();
 
-    function cekApakahKodeAda(val) {
-        const hashInput = CryptoJS.SHA256(val).toString();
-        if (db[hashInput]) return true;
-        if (db[val]) return true;
-        return false;
-    }
-
-    function triggerCheck() {
-        const val = document.getElementById('kodeInput').value.trim();
-        const err = document.getElementById('errorArea');
-        err.style.display = 'none';
-
-        if (!val) return;
-
-        if (!cekApakahKodeAda(val)) {
-            err.style.display = "block";
-            return;
-        }
-
-        if (!isLiked) {
-            document.getElementById('likeModal').style.display = 'flex';
-        } else {
-            prosesBuka();
-        }
-    }
-
-    function bukaYoutube() {
-        // --- SELEPIN IKLAN DI SINI ---
-        // 1. Buka Iklan di tab baru
-        try { window.open(AD_LINK, '_blank'); } catch(e){}
-        
-        // 2. Buka YouTube di tab baru (Biasanya ini yang akan difokuskan browser)
-        window.open(YT_LINK, '_blank');
-
-        const btnYt = document.getElementById('btnBukaYt');
-        const btnLanjut = document.getElementById('btnLanjut');
-        
-        btnYt.style.pointerEvents = "none";
-        btnYt.style.opacity = "0.6";
-
-        let countdown = 5;
-        const timer = setInterval(() => {
-            btnLanjut.innerHTML = `<i class="bi bi-clock"></i> Tunggu ${countdown}s...`;
-            countdown--;
-            if (countdown < 0) {
-                clearInterval(timer);
-                btnLanjut.classList.add('active');
-                btnLanjut.innerHTML = `<i class="bi bi-check-lg"></i> Saya Sudah Like`;
-            }
-        }, 1000);
-    }
-
-    function selesaiLike() {
-        isLiked = true;
-        document.getElementById('likeModal').style.display = 'none';
-        prosesBuka();
-    }
-
-    function redirectUser(targetUrl) {
-        const win = window.open(targetUrl, '_blank');
-        if (win) {
-            win.focus();
-            window.location.replace(AD_LINK);
-        } else {
-            window.location.href = targetUrl;
-        }
-    }
-
     function prosesBuka() {
         const val = document.getElementById('kodeInput').value.trim();
+        const err = document.getElementById('errorArea');
+        err.style.display = "none";
+        if (!val) return;
+
+        let targetUrl = "";
         const hashInput = CryptoJS.SHA256(val).toString();
+
         if (db[hashInput]) {
             try {
                 const encryptedData = db[hashInput];
                 const bytes = CryptoJS.AES.decrypt(encryptedData, val);
-                const decryptedUrl = bytes.toString(CryptoJS.enc.Utf8);
-                if (decryptedUrl.startsWith('http')) {
-                    redirectUser(decryptedUrl);
-                    return;
-                }
+                targetUrl = bytes.toString(CryptoJS.enc.Utf8);
             } catch (e) {}
+        } else if (db[val]) {
+            targetUrl = db[val];
+            if (!targetUrl.startsWith('http')) {
+                try { targetUrl = atob(targetUrl); } catch(e) {}
+            }
         }
-        if (db[val]) {
-            let target = db[val];
-            if (!target.startsWith('http')) {
-                try { target = atob(target); } catch(e) {}
+
+        if (targetUrl && targetUrl.startsWith('http')) {
+            pendingUrl = targetUrl;
+            document.getElementById('likeModal').style.display = 'flex';
+        } else {
+            err.style.display = "block";
+        }
+    }
+
+    function bukaYoutube() {
+        window.open(YT_LINK, '_blank');
+        const btn = document.getElementById('btnLanjut');
+        let cd = 5;
+        const timer = setInterval(() => {
+            btn.innerHTML = `<i class="bi bi-clock"></i> Tunggu ${cd}s...`;
+            if (cd-- <= 0) {
+                clearInterval(timer);
+                btn.classList.add('active');
+                btn.innerHTML = `<i class="bi bi-check-lg"></i> Saya Sudah Like`;
             }
-            if (target.startsWith('http')) {
-                redirectUser(target);
-                return;
-            }
+        }, 1000);
+    }
+
+    function eksekusiFinal() {
+        const win = window.open(pendingUrl, '_blank');
+        if (win) {
+            win.focus();
+            window.location.replace(AD_LINK);
+        } else {
+            window.location.href = pendingUrl;
         }
     }
 
     document.getElementById('kodeInput').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') triggerCheck();
+        if (e.key === 'Enter') prosesBuka();
     });
 </script>
 
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"e5bd0313312b48ed9abe9312e2690ffe","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 </body>
 </html>
