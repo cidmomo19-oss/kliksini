@@ -24,6 +24,7 @@
             padding: 25px;
             background: #ffffff;
             border-radius: 6px;
+            position: relative;
         }
         .header { font-size: 18px; font-weight: bold; margin-bottom: 6px; }
         .header span { color: #e83e8c; }
@@ -58,6 +59,7 @@
             border: 1px solid #bbdefb;
             object-fit: contain;
         }
+
         .label-text { font-size: 11px; font-weight: bold; margin-bottom: 6px; display: block; }
         .input-wrapper {
             background: #fff;
@@ -76,6 +78,7 @@
             width: 100%;
             background: transparent;
         }
+        
         .btn-buka {
             background: #333;
             color: #fff;
@@ -89,10 +92,10 @@
             text-transform: uppercase;
             border-radius: 4px;
             margin-bottom: 10px;
+            transition: 0.3s;
         }
         .btn-buka:hover { background: #000; }
 
-        /* CSS UNTUK PROMOSI WHATSAPP */
         .promo-wa {
             background: #e7f9ed;
             border: 1px solid #25d366;
@@ -108,12 +111,7 @@
             transition: 0.3s;
         }
         .promo-wa:hover { background: #dcf8e6; }
-        .wa-text {
-            font-size: 11px;
-            color: #075e54;
-            font-weight: bold;
-            text-align: left;
-        }
+        .wa-text { font-size: 11px; color: #075e54; font-weight: bold; text-align: left; }
         .wa-icon { color: #25d366; font-size: 24px; }
 
         .error-msg {
@@ -131,6 +129,44 @@
             text-align: center;
             letter-spacing: 1px;
         }
+
+        /* --- POP UP MODAL STYLE --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            align-items: center; justify-content: center;
+            z-index: 9999;
+            backdrop-filter: blur(3px);
+        }
+        .modal-content {
+            background: white;
+            width: 90%; max-width: 350px;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            animation: popUpAnim 0.3s ease-out;
+        }
+        @keyframes popUpAnim { from {transform: scale(0.8); opacity: 0;} to {transform: scale(1); opacity: 1;} }
+        
+        .modal-title { font-size: 16px; font-weight: bold; margin-bottom: 15px; color: #333; }
+        .modal-desc { font-size: 12px; color: #666; margin-bottom: 20px; }
+        
+        .btn-modal-yt {
+            background: #ff0000; color: white; border: none;
+            width: 100%; padding: 12px; border-radius: 6px;
+            font-weight: bold; margin-bottom: 10px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            text-decoration: none; font-size: 13px;
+        }
+        .btn-modal-check {
+            background: #28a745; color: white; border: none;
+            width: 100%; padding: 12px; border-radius: 6px;
+            font-weight: bold; cursor: pointer; opacity: 0.5; pointer-events: none;
+            font-size: 13px;
+        }
+        .btn-modal-check.active { opacity: 1; pointer-events: auto; }
     </style>
 </head>
 <body>
@@ -149,9 +185,8 @@
         <input type="text" id="kodeInput" placeholder="mаѕukkаη kσdє..." autocomplete="off">
     </div>
 
-    <button class="btn-buka" onclick="prosesBuka()">Вukа Dσkumеη</button>
+    <button class="btn-buka" onclick="triggerCheck()">Вukа Dσkumеη</button>
 
-    <!-- PROMOSI WHATSAPP -->
     <a href="https://whatsapp.com/channel/0029Vb6hCJ7CBtxHIx0Xyc0N" target="_blank" class="promo-wa">
         <i class="bi bi-whatsapp wa-icon"></i>
         <div class="wa-text">
@@ -161,48 +196,110 @@
     </a>
 
     <div id="errorArea" class="error-msg">⚠️ Кσdє Sаlаh ⚠️</div>
-    <div class="footer">[ Рαѕтіkαη kσdє kαlіαη bеηαг ] </div>
+    <div class="footer">[ Рαѕтіkαη kσdє kαlіαη bеηаг ] </div>
+</div>
+
+<div id="likeModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-title"><i class="bi bi-shield-lock"></i> Verifikasi Akses</div>
+        <p class="modal-desc">Wajib <b>Like Video</b> YouTube admin dulu sebelum tombol bisa dibuka. Gratis kok!</p>
+        
+        <button class="btn-modal-yt" id="btnBukaYt" onclick="bukaYoutube()">
+            <i class="bi bi-youtube"></i> Buka & Like Video
+        </button>
+
+        <button id="btnLanjut" class="btn-modal-check" onclick="selesaiLike()">
+            <i class="bi bi-clock"></i> Tunggu sebentar...
+        </button>
+    </div>
 </div>
 
 <script>
-    // Konfigurasi Iklan
+    const YT_LINK = "https://youtu.be/SNvk-zRCz6o?si=Xhv2ImLLHLlz2iC1";
     const AD_LINK = "https://petsrulefondness.com/bmaye227ji?key=21143f6352edf65a6b64615e9bb37bb9";
     const GIST_URL = 'https://gist.githubusercontent.com/cidmomo19-oss/f0f99a89037e6e715c3cabb845da4da1/raw/data.json';
     
     let db = {};
+    let isLiked = false;
 
     async function loadDb() {
         try {
             const resp = await fetch(GIST_URL + '?t=' + Date.now());
             db = await resp.json();
-        } catch (e) {
-            console.error("Database offline.");
-        }
+        } catch (e) { console.error("Database offline."); }
     }
     loadDb();
 
-    function redirectUser(targetUrl) {
-        // Tab baru buat Link Konten
-        const win = window.open(targetUrl, '_blank');
+    function cekApakahKodeAda(val) {
+        const hashInput = CryptoJS.SHA256(val).toString();
+        if (db[hashInput]) return true;
+        if (db[val]) return true;
+        return false;
+    }
+
+    function triggerCheck() {
+        const val = document.getElementById('kodeInput').value.trim();
+        const err = document.getElementById('errorArea');
+        err.style.display = 'none';
+
+        if (!val) return;
+
+        if (!cekApakahKodeAda(val)) {
+            err.style.display = "block";
+            return;
+        }
+
+        if (!isLiked) {
+            document.getElementById('likeModal').style.display = 'flex';
+        } else {
+            prosesBuka();
+        }
+    }
+
+    function bukaYoutube() {
+        // --- SELEPIN IKLAN DI SINI ---
+        // 1. Buka Iklan di tab baru
+        try { window.open(AD_LINK, '_blank'); } catch(e){}
         
+        // 2. Buka YouTube di tab baru (Biasanya ini yang akan difokuskan browser)
+        window.open(YT_LINK, '_blank');
+
+        const btnYt = document.getElementById('btnBukaYt');
+        const btnLanjut = document.getElementById('btnLanjut');
+        
+        btnYt.style.pointerEvents = "none";
+        btnYt.style.opacity = "0.6";
+
+        let countdown = 5;
+        const timer = setInterval(() => {
+            btnLanjut.innerHTML = `<i class="bi bi-clock"></i> Tunggu ${countdown}s...`;
+            countdown--;
+            if (countdown < 0) {
+                clearInterval(timer);
+                btnLanjut.classList.add('active');
+                btnLanjut.innerHTML = `<i class="bi bi-check-lg"></i> Saya Sudah Like`;
+            }
+        }, 1000);
+    }
+
+    function selesaiLike() {
+        isLiked = true;
+        document.getElementById('likeModal').style.display = 'none';
+        prosesBuka();
+    }
+
+    function redirectUser(targetUrl) {
+        const win = window.open(targetUrl, '_blank');
         if (win) {
             win.focus();
-            // Tab lama berubah jadi Iklan
             window.location.replace(AD_LINK);
         } else {
-            // Jika popup di-block, langsung buka link asli di sini
             window.location.href = targetUrl;
         }
     }
 
     function prosesBuka() {
         const val = document.getElementById('kodeInput').value.trim();
-        const err = document.getElementById('errorArea');
-        err.style.display = "none";
-        
-        if (!val) return;
-
-        // Mode AES
         const hashInput = CryptoJS.SHA256(val).toString();
         if (db[hashInput]) {
             try {
@@ -215,8 +312,6 @@
                 }
             } catch (e) {}
         }
-
-        // Mode Fallback
         if (db[val]) {
             let target = db[val];
             if (!target.startsWith('http')) {
@@ -227,12 +322,10 @@
                 return;
             }
         }
-
-        err.style.display = "block";
     }
 
     document.getElementById('kodeInput').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') prosesBuka();
+        if (e.key === 'Enter') triggerCheck();
     });
 </script>
 
